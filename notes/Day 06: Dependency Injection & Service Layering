@@ -1,0 +1,95 @@
+
+
+# Day 06: Dependency Injection & Service Layering
+
+## 🎯 Learning Objectives
+* **Inversion of Control (IoC):** Stop "making" tools; start "requesting" them.
+* **Service Lifetimes:** Master the difference between Transient, Scoped, and Singleton.
+* **Architectural Decoupling:** Move from "Fat Controllers" to the **Controller → Service → Repository** pattern.
+* **Maintenance:** Build code that is testable and easy to swap (e.g., In-Memory to SQL).
+
+---
+
+## 🛠️ What is Dependency Injection (DI)?
+At Microsoft, "new-ing up" a class inside another class is considered a **"Tightly Coupled"** anti-pattern. 
+
+* **The Problem:** If `DevicesController` creates its own `ComplianceEvaluator`, you can't test the controller without the evaluator, and you can't swap the evaluator without changing the controller's code.
+* **The Solution (DI):** The controller simply defines what it needs in its **Constructor**. The ASP.NET Core **Service Container** (the "Toolbox") provides the instance automatically.
+
+
+
+---
+
+## ⏳ Service Lifetimes: When does the object die?
+
+Choosing the right lifetime is critical for memory management and state consistency.
+
+| Lifetime | Registration | Behavior | Best Use Case |
+| :--- | :--- | :--- | :--- |
+| **Transient** | `AddTransient` | A new instance is created **every time** it's requested. | Lightweight, stateless helpers (like our `ComplianceEvaluator`). |
+| **Scoped** | `AddScoped` | One instance is created **per HTTP request**. | Business Services or Database Contexts (EF Core). |
+| **Singleton** | `AddSingleton` | Created **once** when the app starts and shared by everyone. | Shared Caches or our `InMemoryDeviceRepository`. |
+
+
+
+---
+
+## 🏗️ The 3-Layer Architecture
+We are refactoring **Endpoint Guardian** into a production-ready "Layered Stack."
+
+1.  **Controller (Web Layer):** Handles HTTP, status codes (`Ok`, `NotFound`), and basic input validation.
+2.  **Service (Business Layer):** Coordinates workflows (e.g., "To register a device, first check if it exists, then save it, then trigger a log").
+3.  **Repository (Data Layer):** The only layer that talks to the storage (In-memory list or Database).
+
+
+
+### Why this structure?
+* **Thin Controllers:** They only handle "the door" (HTTP). 
+* **Reusable Services:** The `DeviceService` logic can be used by an API, a background worker, or a mobile app without duplication.
+* **Swappable Repos:** You can switch from `InMemoryDeviceRepository` to `EfCoreDeviceRepository` by changing **one line** in `Program.cs`.
+
+---
+
+## 🛠️ Refactoring Guide
+* **`IDeviceRepository`**: Defines the "Contract" (GetAll, GetById, Add, Update).
+* **`DeviceService`**: Injects both the Repository and the Evaluator to handle the actual business of managing devices.
+* **`Program.cs`**: The "Wiring Room" where we tell the app which concrete classes to use for our interfaces.
+
+---
+> **Day 6 Recap:** Don't be the engineer who builds the tools. Be the engineer who designs the system and requests the tools. **Interface-based design + DI = Scalability.**
+
+---
+
+# Day 07 — Masterclass: Middleware, Configuration, & Environments
+
+### Session Title
+**The Request Pipeline: Toll Booths, Secret Files, and Deployment States**
+
+### 1. The Middleware Pipeline (The Toll Booths)
+Every request from an Intune device (like a heartbeat check-in) travels through a **Pipeline**. 
+Middlewares are "toll booths" that look at the request before it reaches your Controller.
+
+* **Booth 1 (Security):** Is this device authorized?
+* **Booth 2 (Logging):** Record that this request happened.
+* **Booth 3 (Routing):** Send this to the `DevicesController`.
+
+
+
+### 2. Configuration (`appsettings.json`)
+Professional apps **never** hardcode values like `MinimumOsVersion = 13`.
+We use JSON files to store these settings so they can be changed without recompiling the code.
+
+### 3. The Options Pattern
+Instead of reading raw strings from a file, we map the JSON to a C# class (e.g., `ComplianceOptions`). We then inject `IOptions<ComplianceOptions>` into our service. This makes our configuration **Type-Safe**.
+
+### 4. Environments (Dev vs. Prod)
+Microsoft engineers use **Environments** to toggle features:
+* **Development:** Show detailed error pages and use in-memory data.
+* **Production:** Hide errors for security and connect to real Azure SQL databases.
+
+---
+
+## 🛠️ Build Task for Day 07
+1.  **Create `appsettings.json`**: Store your `MaxCheckInAgeHours` there.
+2.  **Implement the Options Pattern**: Create a `ComplianceOptions` class and wire it up in `Program.cs`.
+3.  **Add Custom Middleware**: Write a simple middleware that prints "Incoming Device Request" to the console for every single call.
