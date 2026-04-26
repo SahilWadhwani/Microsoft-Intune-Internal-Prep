@@ -9,10 +9,12 @@ namespace EndpointGuardian.Api.Controllers;
 public class DevicesController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
+    private readonly ILogger<DevicesController> _logger;
 
-    public DevicesController(IDeviceService deviceService)
+    public DevicesController(IDeviceService deviceService, ILogger<DevicesController> logger)
     {
         _deviceService = deviceService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -24,6 +26,7 @@ public class DevicesController : ControllerBase
     [HttpGet("{id}")]
     public ActionResult<ManagedDevice> GetById(string id)
     {
+        _logger.LogInformation("Received request to fetch device with id {DeviceId}", id);
         var device = _deviceService.GetDeviceById(id);
 
         if (device is null)
