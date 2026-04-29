@@ -30,30 +30,32 @@ public class DeviceService : IDeviceService
         return _deviceRepository.GetById(id);
     }
 
-    public ManagedDevice? RegisterDevice(CreateDeviceRequest request)
-    {
-        var existing = _deviceRepository.GetById(request.Id);
-        if (existing is not null)
+    public DeviceResponse? CreateDevice(CreateDeviceRequest request)
+    {   
+        if (string.IsNullOrWhiteSpace(request.DeviceName) || request.OsVersion <= 0)
         {
             return null;
         }
 
-        var device = new ManagedDevice
-        {
-            Id = request.Id,
-            DeviceName = request.DeviceName,
-            Platform = request.Platform,
-            OsVersion = request.OsVersion,
-            IsEncrypted = request.IsEncrypted,
-            HasPassword = request.HasPassword,
-            DefenderEnabled = request.DefenderEnabled,
-            LastCheckInUtc = DateTime.UtcNow
-        };
+        var device = new ManagedDevice(
+            Guid.NewGuid().ToString(),
+            request.DeviceName,
+            request.Platform);
+
+        device.UpdateOsVersion(request.OsVersion);
+        device.CheckIn(
+            request.IsEncrypted,
+            request.HasPassword,
+            request.DefenderEnabled);
 
         _deviceRepository.Add(device);
 
+        _logger.LogInformation(
+            "Device {DeviceId} onboarded successfully on platform {Platform}",
+            device.Id,
+            device.Platform);
 
-        return device;
+        return ToDeviceResponse(device);
     }
 
     public ManagedDevice? CheckInDevice(string id, CheckInDeviceRequest request)
@@ -95,4 +97,61 @@ public class DeviceService : IDeviceService
 
         return _complianceEvaluator.Evaluate(device, baselinePolicy);
     }
+
+    public PagedDevicesResponse GetDevices(GetDevicesQuery query)
+    {
+
+        var devices = _deviceRepository.GetAll().AsEnumerable();
+
+        if (query.Platform is not null)
+        {
+            devices = devices.Where(d => d.Platform == query.Platform);
+        }
+
+        if (query.Status is not null)
+        {
+            devices = devices.Where(d => d.CurrentComplianceStatus == query.Status);
+        }
+
+        var totalCount = devices.Count();
+
+        var items = devices
+            .OrderBy(d => d.DeviceName)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(ToSummaryResponse)
+            .ToList();
+
+        return new PagedDevicesResponse(items, query.Page, query.PageSize, totalCount);
+    }
+
+    private static DeviceResponse ToDeviceResponse(ManagedDevice device)
+    {
+        return new DeviceResponse(
+            device.Id,
+            device.DeviceName,
+            device.Platform,
+            device.OsVersion,
+            device.CurrentPostureSnapshot?.IsEncrypted,
+            device.CurrentPostureSnapshot?.HasPassword,
+            device.CurrentPostureSnapshot?.DefenderEnabled,
+            device.LastCheckInUtc,
+            device.CurrentComplianceStatus
+        );
+    }
+
+
+    private static DeviceSummaryResponse ToSummaryResponse(ManagedDevice device)
+    {
+        return new DeviceSummaryResponse(
+            device.Id,
+            device.DeviceName,
+            device.Platform,
+            device.LastCheckInUtc,
+            device.CurrentComplianceStatus
+        );
+    }
+
+
+
 }

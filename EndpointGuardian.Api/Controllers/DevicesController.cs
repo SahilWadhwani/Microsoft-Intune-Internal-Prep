@@ -17,16 +17,35 @@ public class DevicesController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet]
-    public ActionResult<List<ManagedDevice>> GetAll()
+    [HttpPost]
+    public ActionResult<DeviceResponse> Create(CreateDeviceRequest request)
     {
-        return Ok(_deviceService.GetAllDevices());
+        var result = _deviceService.CreateDevice(request);
+
+        if (result is null)
+        {
+            return Conflict("A device with this ID already exists.");
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpGet]
+    public ActionResult<PagedDeviceResponse> GetDevices([FromQuery] GetDevicesQuery query)
+    {
+        if (query.page < 1 || query.PageSize < 1 || query.PageSize > 100)
+        {
+            return BadRequest("Invalid paging parameters.");
+        }
+        var response = _deviceService.GetDevices(query);
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    public ActionResult<ManagedDevice> GetById(string id)
+    public ActionResult<DeviceResponse> GetById(string id)
     {
         _logger.LogInformation("Received request to fetch device with id {DeviceId}", id);
+        
         var device = _deviceService.GetDeviceById(id);
 
         if (device is null)
@@ -37,19 +56,7 @@ public class DevicesController : ControllerBase
         return Ok(device);
     }
 
-    [HttpPost]
-    public ActionResult<ManagedDevice> Create(CreateDeviceRequest request)
-    {
-        var device = _deviceService.RegisterDevice(request);
-
-        if (device is null)
-        {
-            return BadRequest("A device with this ID already exists.");
-        }
-
-        return CreatedAtAction(nameof(GetById), new { id = device.Id }, device);
-    }
-
+    
     [HttpPost("{id}/checkin")]
     public ActionResult<ManagedDevice> CheckIn(string id, CheckInDeviceRequest request)
     {

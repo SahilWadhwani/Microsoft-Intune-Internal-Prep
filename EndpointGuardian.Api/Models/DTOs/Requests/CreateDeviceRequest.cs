@@ -1,5 +1,4 @@
 public record CreateDeviceRequest(
-    string Id,
     string DeviceName,
     DevicePlatform Platform,
     int OsVersion,
@@ -7,4 +6,3 @@ public record CreateDeviceRequest(
     bool? HasPassword,
     bool? DefenderEnabled
 );
-
