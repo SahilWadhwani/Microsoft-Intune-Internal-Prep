@@ -13,11 +13,13 @@ builder.Services.Configure<CompliancePolicyOptions>(
 
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IPolicyAssignmentService, PolicyAssignmentService>();
 
 builder.Services.AddTransient<IComplianceEvaluator, BasicComplianceEvaluator>();
 
 builder.Services.AddSingleton<IDeviceRepository, InMemoryDeviceRepository>();
 builder.Services.AddSingleton<IPolicyRepository, InMemoryPolicyRepository>();
+builder.Services.AddSingleton<IPolicyAssignmentRepository, InMemoryPolicyAssignmentRepository>();
 
 
 
