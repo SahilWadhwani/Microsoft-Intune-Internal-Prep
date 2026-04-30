@@ -1,7 +1,7 @@
 using EndpointGuardian.Api.Middleware;
 using EndpointGuardian.Api.Options;
-using EndpointGiardian.Api.Models;
-using EndPointGuardian.APi.Services;
+using EndpointGuardian.Api.Models;
+using EndpointGuardian.AApi.Services;
 using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,8 +12,12 @@ builder.Services.Configure<CompliancePolicyOptions>(
     builder.Configuration.GetSection("CompliancePolicy"));
 
 builder.Services.AddScoped<IDeviceService, DeviceService>();
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+
 builder.Services.AddTransient<IComplianceEvaluator, BasicComplianceEvaluator>();
+
 builder.Services.AddSingleton<IDeviceRepository, InMemoryDeviceRepository>();
+builder.Services.AddSingleton<IPolicyRepository, InMemoryPolicyRepository>();
 
 
 
