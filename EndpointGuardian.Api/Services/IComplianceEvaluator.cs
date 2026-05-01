@@ -1,4 +1,10 @@
+using EndpointGuardian.Api.Models;
+
+namespace EndpointGuardian.Api.Services;
+
 public interface IComplianceEvaluator
 {
-       ComplianceEvaluationResult Evaluate(ManagedDevice device, CompliancePolicy policy); 
+    PolicyEvaluationResult EvaluatePolicy(
+        ManagedDevice device,
+        CompliancePolicy policy);
 }

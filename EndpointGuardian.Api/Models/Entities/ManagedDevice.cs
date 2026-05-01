@@ -1,26 +1,62 @@
-public enum DevicePlatform
-{
-    Unknown,
-    Wondows,
-    Mac,
-    IOS,
-    Android
-}
+namespace EndpointGuardian.Api.Models.Entities;
 
 public class ManagedDevice
 {
-    public string Id {get; set;} = "";
-    public string DeviceName {get; set;} = "";
-    public DevicePlatform PLatform {get; set;}
-    public int OsVersion {get; set;}
+    public string Id { get; private set; }
+    public string DeviceName { get; private set; }
+    public DevicePlatform Platform { get; private set; }
+    public int OsVersion { get; private set; }
+    public DateTime LastCheckInUtc { get; private set; }
+    public ComplianceStatus? CurrentComplianceStatus { get; private set; }
+    public DevicePostureSnapshot? CurrentPostureSnapshot { get; private set; }
 
-    public bool? IsEncrypted {get; set;}
+    public ManagedDevice(
+        string id,
+        string deviceName,
+        DevicePlatform platform)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Device id cannot be empty.");
+        }
 
-    public bool? HasPassword {get; set;}
+        if (string.IsNullOrWhiteSpace(deviceName))
+        {
+            throw new ArgumentException("Device name cannot be empty.");
+        }
 
-    public bool? DefenderEnabled {get; set;}
+        Id = id;
+        DeviceName = deviceName;
+        Platform = platform;
+        LastCheckInUtc = DateTime.UtcNow;
+    }
 
-    public DateTime LastCheckInUtc {get; set;}
+    public void UpdateOsVersion(int osVersion)
+    {
+        if (osVersion <= 0)
+        {
+            throw new ArgumentException("OS version must be greater than zero.");
+        }
 
+        OsVersion = osVersion;
+    }
+
+    public void CheckIn(
+        bool? isEncrypted,
+        bool? hasPassword,
+        bool? defenderEnabled)
+    {
+        CurrentPostureSnapshot = new DevicePostureSnapshot(
+            isEncrypted,
+            hasPassword,
+            defenderEnabled,
+            DateTime.UtcNow);
+
+        LastCheckInUtc = DateTime.UtcNow;
+    }
+
+    public void UpdateComplianceStatus(ComplianceStatus status)
+    {
+        CurrentComplianceStatus = status;
+    }
 }
-
