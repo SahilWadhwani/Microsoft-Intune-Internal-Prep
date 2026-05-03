@@ -15,6 +15,7 @@ builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IEffectivePolicyResolver, EffectivePolicyResolver>();
 builder.Services.AddScoped<IPolicyAssignmentService, PolicyAssignmentService>();
+builder.Services.AddScoped<IAccessDecisionService, AccessDecisionService>();
 
 builder.Services.AddTransient<IComplianceEvaluator, BasicComplianceEvaluator>();
 
