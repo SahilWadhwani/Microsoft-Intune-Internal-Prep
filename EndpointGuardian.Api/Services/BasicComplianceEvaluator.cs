@@ -25,6 +25,40 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
             throw new ArgumentNullException(nameof(policy));
         }
 
+        if (!policy.IsActive)
+        {
+            return new PolicyEvaluationResult(
+                policy.Id,
+                policy.Name,
+                policy.Version,
+                ComplianceStatus.Unknown,
+                new List<FailureReason>
+                {
+                    new FailureReason(
+                        "POLICY_INACTIVE",
+                        "Policy is inactive and should not be used for compliance evaluation.",
+                        FailureSeverity.Warning)
+                },
+                DateTime.UtcNow);
+        }
+
+        if (device.CurrentPostureSnapshot is null)
+        {
+            return new PolicyEvaluationResult(
+                policy.Id,
+                policy.Name,
+                policy.Version,
+                ComplianceStatus.Unknown,
+                new List<FailureReason>
+                {
+                    new FailureReason(
+                        "POSTURE_NOT_REPORTED",
+                        "Device has not reported a posture snapshot, so compliance cannot be determined.",
+                        FailureSeverity.High)
+                },
+                DateTime.UtcNow);
+        }
+
         _logger.LogInformation(
             "Evaluating device {DeviceId} against policy {PolicyId} version {PolicyVersion}",
             device.Id,
@@ -43,20 +77,13 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
             ? ComplianceStatus.Compliant
             : ComplianceStatus.NonCompliant;
 
-        _logger.LogInformation(
-            "Device {DeviceId} evaluated against policy {PolicyId} with status {Status} and {FailureCount} failures",
-            device.Id,
-            policy.Id,
-            status,
-            failures.Count);
-
         return new PolicyEvaluationResult(
             policy.Id,
             policy.Name,
             policy.Version,
             status,
-            failures
-        );
+            failures,
+            DateTime.UtcNow);
     }
 
     private static void EvaluateOsVersion(
@@ -68,8 +95,8 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
         {
             failures.Add(new FailureReason(
                 "OS_VERSION_TOO_LOW",
-                $"Device OS version {device.OsVersion} is below required version {policy.MinimumOsVersion}."
-            ));
+                $"Device OS version {device.OsVersion} is below required version {policy.MinimumOsVersion}.",
+                FailureSeverity.High));
         }
     }
 
@@ -83,21 +110,23 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
             return;
         }
 
-        if (device.CurrentPostureSnapshot?.IsEncrypted is null)
+        var posture = device.CurrentPostureSnapshot!;
+
+        if (posture.IsEncrypted is null)
         {
             failures.Add(new FailureReason(
                 "ENCRYPTION_NOT_REPORTED",
-                "Device encryption is required but encryption status was not reported."
-            ));
+                "Device encryption is required but encryption status was not reported.",
+                FailureSeverity.High));
             return;
         }
 
-        if (device.CurrentPostureSnapshot.IsEncrypted == false)
+        if (posture.IsEncrypted == false)
         {
             failures.Add(new FailureReason(
                 "ENCRYPTION_DISABLED",
-                "Device encryption is required but is reported as disabled."
-            ));
+                "Device encryption is required but is reported as disabled.",
+                FailureSeverity.High));
         }
     }
 
@@ -111,21 +140,23 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
             return;
         }
 
-        if (device.CurrentPostureSnapshot?.HasPassword is null)
+        var posture = device.CurrentPostureSnapshot!;
+
+        if (posture.HasPassword is null)
         {
             failures.Add(new FailureReason(
                 "PASSWORD_NOT_REPORTED",
-                "Device password requirement is enabled but password status was not reported."
-            ));
+                "Device password requirement is enabled but password status was not reported.",
+                FailureSeverity.High));
             return;
         }
 
-        if (device.CurrentPostureSnapshot.HasPassword == false)
+        if (posture.HasPassword == false)
         {
             failures.Add(new FailureReason(
                 "PASSWORD_MISSING",
-                "Device password requirement is enabled but device does not satisfy it."
-            ));
+                "Device password requirement is enabled but device does not satisfy it.",
+                FailureSeverity.High));
         }
     }
 
@@ -139,21 +170,23 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
             return;
         }
 
-        if (device.CurrentPostureSnapshot?.DefenderEnabled is null)
+        var posture = device.CurrentPostureSnapshot!;
+
+        if (posture.DefenderEnabled is null)
         {
             failures.Add(new FailureReason(
                 "DEFENDER_NOT_REPORTED",
-                "Defender is required but Defender status was not reported."
-            ));
+                "Defender is required but Defender status was not reported.",
+                FailureSeverity.High));
             return;
         }
 
-        if (device.CurrentPostureSnapshot.DefenderEnabled == false)
+        if (posture.DefenderEnabled == false)
         {
             failures.Add(new FailureReason(
                 "DEFENDER_DISABLED",
-                "Defender is required but is reported as disabled."
-            ));
+                "Defender is required but is reported as disabled.",
+                FailureSeverity.High));
         }
     }
 
@@ -168,8 +201,8 @@ public class BasicComplianceEvaluator : IComplianceEvaluator
         {
             failures.Add(new FailureReason(
                 "CHECKIN_STALE",
-                $"Device last checked in {Math.Round(hoursSinceCheckIn, 1)} hours ago, exceeding allowed limit of {policy.MaxCheckInAgeHours} hours."
-            ));
+                $"Device last checked in {Math.Round(hoursSinceCheckIn, 1)} hours ago, exceeding allowed limit of {policy.MaxCheckInAgeHours} hours.",
+                FailureSeverity.High));
         }
     }
 }

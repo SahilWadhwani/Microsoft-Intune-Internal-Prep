@@ -1,5 +1,6 @@
 namespace EndpointGuardian.Api.Models.DTOs.Responses;
 public record DeviceComplianceEvaluationResult(
+    string EvaluationId,
 
     string DeviceId,
 

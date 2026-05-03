@@ -10,6 +10,8 @@ public record PolicyEvaluationResult(
 
     ComplianceStatus Status,
 
-    List<FailureReason> FailureReasons
+    List<FailureReason> FailureReasons,
+
+    DateTime EvaluatedAtUtc
 
 );

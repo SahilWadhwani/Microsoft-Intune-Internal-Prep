@@ -35,38 +35,11 @@ public class DeviceComplianceService : IDeviceComplianceService
             return null;
         }
 
-        _logger.LogInformation(
-            "Starting compliance evaluation for device {DeviceId}",
-            deviceId);
-
         var policies = _policyResolver.ResolvePoliciesForDevice(device);
 
         if (policies.Count == 0)
         {
-            _logger.LogWarning(
-                "Device {DeviceId} has no active assigned policies",
-                deviceId);
-
-            var noPolicyResult = new PolicyEvaluationResult(
-                "none",
-                "No active policy assigned",
-                0,
-                ComplianceStatus.Unknown,
-                new List<FailureReason>
-                {
-                    new FailureReason(
-                        "NO_ACTIVE_POLICY_ASSIGNED",
-                        "No active compliance policy is assigned to this device."
-                    )
-                }
-            );
-
-            var unknownResult = new DeviceComplianceEvaluationResult(
-                device.Id,
-                ComplianceStatus.Unknown,
-                new List<PolicyEvaluationResult> { noPolicyResult },
-                DateTime.UtcNow
-            );
+            var unknownResult = CreateNoPolicyResult(device);
 
             device.UpdateComplianceStatus(ComplianceStatus.Unknown);
             _deviceRepository.Update(device);
@@ -74,30 +47,107 @@ public class DeviceComplianceService : IDeviceComplianceService
             return unknownResult;
         }
 
-        var policyResults = policies
-            .Select(policy => _complianceEvaluator.EvaluatePolicy(device, policy))
-            .ToList();
+        var policyResults = new List<PolicyEvaluationResult>();
 
-        var overallStatus = policyResults.All(r => r.Status == ComplianceStatus.Compliant)
-            ? ComplianceStatus.Compliant
-            : ComplianceStatus.NonCompliant;
+        foreach (var policy in policies)
+        {
+            try
+            {
+                var result = _complianceEvaluator.EvaluatePolicy(device, policy);
+                policyResults.Add(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Evaluation failed for device {DeviceId} and policy {PolicyId}",
+                    device.Id,
+                    policy.Id);
 
-        var result = new DeviceComplianceEvaluationResult(
+                policyResults.Add(new PolicyEvaluationResult(
+                    policy.Id,
+                    policy.Name,
+                    policy.Version,
+                    ComplianceStatus.Error,
+                    new List<FailureReason>
+                    {
+                        new FailureReason(
+                            "EVALUATION_ERROR",
+                            "An unexpected error occurred while evaluating this policy.",
+                            FailureSeverity.Critical)
+                    },
+                    DateTime.UtcNow));
+            }
+        }
+
+        var overallStatus = CombinePolicyResults(policyResults);
+
+        var evaluation = new DeviceComplianceEvaluationResult(
+            Guid.NewGuid().ToString(),
             device.Id,
             overallStatus,
             policyResults,
-            DateTime.UtcNow
-        );
+            DateTime.UtcNow);
 
         device.UpdateComplianceStatus(overallStatus);
         _deviceRepository.Update(device);
 
         _logger.LogInformation(
-            "Completed compliance evaluation for device {DeviceId} with overall status {OverallStatus} across {PolicyCount} policies",
+            "Compliance evaluation {EvaluationId} completed for device {DeviceId} with status {OverallStatus}",
+            evaluation.EvaluationId,
             device.Id,
-            overallStatus,
-            policies.Count);
+            overallStatus);
 
-        return result;
+        return evaluation;
+    }
+
+    private static DeviceComplianceEvaluationResult CreateNoPolicyResult(ManagedDevice device)
+    {
+        var noPolicyResult = new PolicyEvaluationResult(
+            "none",
+            "No active policy assigned",
+            0,
+            ComplianceStatus.Unknown,
+            new List<FailureReason>
+            {
+                new FailureReason(
+                    "NO_ACTIVE_POLICY_ASSIGNED",
+                    "No active compliance policy is assigned to this device.",
+                    FailureSeverity.Warning)
+            },
+            DateTime.UtcNow);
+
+        return new DeviceComplianceEvaluationResult(
+            Guid.NewGuid().ToString(),
+            device.Id,
+            ComplianceStatus.Unknown,
+            new List<PolicyEvaluationResult> { noPolicyResult },
+            DateTime.UtcNow);
+    }
+
+    private static ComplianceStatus CombinePolicyResults(
+        List<PolicyEvaluationResult> policyResults)
+    {
+        if (policyResults.Count == 0)
+        {
+            return ComplianceStatus.Unknown;
+        }
+
+        if (policyResults.Any(r => r.Status == ComplianceStatus.Error))
+        {
+            return ComplianceStatus.Error;
+        }
+
+        if (policyResults.Any(r => r.Status == ComplianceStatus.NonCompliant))
+        {
+            return ComplianceStatus.NonCompliant;
+        }
+
+        if (policyResults.Any(r => r.Status == ComplianceStatus.Unknown))
+        {
+            return ComplianceStatus.Unknown;
+        }
+
+        return ComplianceStatus.Compliant;
     }
 }
