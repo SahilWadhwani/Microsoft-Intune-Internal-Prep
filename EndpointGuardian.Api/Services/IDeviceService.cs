@@ -4,9 +4,9 @@ namespace EndpointGuardian.Api.Services;
 
 public interface IDeviceService
 {
-    DeviceResponse? CreateDevice(CreateDeviceRequest request);
+    Task<DeviceResponse?> CreateDeviceAsync(CreateDeviceRequest request);
 
-    DeviceResponse? GetDeviceById(string id);
+    Task<DeviceResponse?> GetDeviceByIdAsync(string id);
 
-    PagedDevicesResponse GetDevices(GetDevicesQuery query);
+    Task<PagedDevicesResponse> GetDevicesAsync(GetDevicesQuery query);
 }

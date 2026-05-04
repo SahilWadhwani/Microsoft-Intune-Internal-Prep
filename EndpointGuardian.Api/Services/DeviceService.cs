@@ -30,7 +30,7 @@ public class DeviceService : IDeviceService
         return _deviceRepository.GetById(id);
     }
 
-    public DeviceResponse? CreateDevice(CreateDeviceRequest request)
+    public async Task<DeviceResponse?> CreateDeviceAsync(CreateDeviceRequest request)
     {   
         if (string.IsNullOrWhiteSpace(request.DeviceName) || request.OsVersion <= 0)
         {
@@ -48,7 +48,7 @@ public class DeviceService : IDeviceService
             request.HasPassword,
             request.DefenderEnabled);
 
-        _deviceRepository.Add(device);
+        await _deviceRepository.AddAsync(device);
 
         _logger.LogInformation(
             "Device {DeviceId} onboarded successfully on platform {Platform}",
@@ -98,10 +98,10 @@ public class DeviceService : IDeviceService
         return _complianceEvaluator.Evaluate(device, baselinePolicy);
     }
 
-    public PagedDevicesResponse GetDevices(GetDevicesQuery query)
+    public async Task<PagedDevicesResponse> GetDevicesAsync(GetDevicesQuery query)
     {
 
-        var devices = _deviceRepository.GetAll().AsEnumerable();
+        var devices = await _deviceRepository.GetAllAsync().AsEnumerable();
 
         if (query.Platform is not null)
         {

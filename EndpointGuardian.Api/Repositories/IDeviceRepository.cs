@@ -4,9 +4,15 @@ namespace EndpointGuardian.Api.Repositories;
 
 
 public interface IDeviceRepository
+
 {
-    List<ManagedDevice> GetAll();
-    ManagedDevice? GetById(string id);
-    void Add(ManagedDevice device);
-    void Update(ManagedDevice device);
+
+    Task<List<ManagedDevice>> GetAllAsync();
+
+    Task<ManagedDevice?> GetByIdAsync(string id);
+
+    Task AddAsync(ManagedDevice device);
+
+    Task UpdateAsync(ManagedDevice device);
+
 }

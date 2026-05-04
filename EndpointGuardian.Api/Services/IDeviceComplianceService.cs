@@ -4,5 +4,5 @@ namespace EndpointGuardian.Api.Services;
 
 public interface IDeviceComplianceService
 {
-    DeviceComplianceEvaluationResult? EvaluateDevice(string deviceId);
+    Task<DeviceComplianceEvaluationResult?> EvaluateDeviceAsync(string deviceId);
 }

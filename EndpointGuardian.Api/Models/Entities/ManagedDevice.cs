@@ -2,6 +2,11 @@ namespace EndpointGuardian.Api.Models.Entities;
 
 public class ManagedDevice
 {
+    private ManagedDevice()
+    {
+        Id = "";
+        DeviceName = "";
+    }
     public string Id { get; private set; }
     public string DeviceName { get; private set; }
     public DevicePlatform Platform { get; private set; }

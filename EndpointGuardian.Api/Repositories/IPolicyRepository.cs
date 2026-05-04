@@ -1,3 +1,4 @@
+using System.ComponentModel.Design.Serialization;
 using EndpointGuardian.Api.Models;
 namespace EndpointGuardian.Api.Repositories;
 
@@ -7,10 +8,12 @@ public interface IPolicyRepository
 
 {
 
-    List<CompliancePolicy> GetAll();
+    Task<List<CompliancePolicy>> GetAllAsync();
 
-    CompliancePolicy? GetById(string id);
+    Task<CompliancePolicy?> GetByIdAsync(string id);
 
-    void Add(CompliancePolicy policy);
+    Task AddAsync(CompliancePolicy policy);
+
+    Task UpdateAsync(CompliancePolicy policy);
 
 }

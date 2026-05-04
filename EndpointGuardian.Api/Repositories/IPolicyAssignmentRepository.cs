@@ -6,12 +6,14 @@ public interface IPolicyAssignmentRepository
 
 {
 
-    List<PolicyAssignment> GetAll();
+    Task<List<PolicyAssignment>> GetAllAsync();
 
-    List<PolicyAssignment> GetByPolicyId(string policyId);
+    Task<List<PolicyAssignment>> GetByPolicyIdAsync(string policyId);
 
-    PolicyAssignment? GetById(string assignmentId);
+    Task<PolicyAssignment?> GetByIdAsync(string assignmentId);
 
-    void Add(PolicyAssignment assignment);
+    Task AddAsync(PolicyAssignment assignment);
+
+    Task UpdateAsync(PolicyAssignment assignment);
 
 }

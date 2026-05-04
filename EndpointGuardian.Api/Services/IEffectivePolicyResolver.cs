@@ -1,4 +1,4 @@
 public interface IEffectivePolicyResolver
 {
-    List<CompliancePolicy> ResolvePoliciesForDevice(ManagedDevice device);
+    Task<List<CompliancePolicy>> ResolvePoliciesForDeviceAsync(ManagedDevice device);
 }

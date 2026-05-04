@@ -21,9 +21,9 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<DeviceResponse> Create(CreateDeviceRequest request)
+    public async Task<ActionResult<DeviceResponse>> Create(CreateDeviceRequest request)
     {
-        var result = _deviceService.CreateDevice(request);
+        var result = await _deviceService.CreateDeviceAsync(request);
 
         if (result is null)
         {
@@ -34,22 +34,22 @@ public class DevicesController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<PagedDeviceResponse> GetDevices([FromQuery] GetDevicesQuery query)
+    public async Task<ActionResult<PagedDeviceResponse>> GetDevices([FromQuery] GetDevicesQuery query)
     {
         if (query.page < 1 || query.PageSize < 1 || query.PageSize > 100)
         {
             return BadRequest("Invalid paging parameters.");
         }
-        var response = _deviceService.GetDevices(query);
+        var response = await _deviceService.GetDevicesAsync(query);
         return Ok(response);
     }
 
     [HttpGet("{id}")]
-    public ActionResult<DeviceResponse> GetById(string id)
+    public async Task<ActionResult<DeviceResponse>> GetById(string id)
     {
         _logger.LogInformation("Received request to fetch device with id {DeviceId}", id);
 
-        var device = _deviceService.GetDeviceById(id);
+        var device = await _deviceService.GetDeviceByIdAsync(id);
 
         if (device is null)
         {

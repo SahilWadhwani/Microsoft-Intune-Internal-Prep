@@ -16,19 +16,33 @@ public class EffectivePolicyResolver : IEffectivePolicyResolver
         _assignmentRepository = assignmentRepository;
     }
 
-    public List<CompliancePolicy> ResolvePoliciesForDevice(ManagedDevice device)
+    public async Task<List<CompliancePolicy>> ResolvePoliciesForDeviceAsync(ManagedDevice device)
     {
-        var activeAssignments = _assignmentRepository
-            .GetAll()
-            .Where(a => a.IsActive)
-            .Where(a => AppliesToDevice(a, device))
-            .ToList();
+        var activeAssignments = (await _assignmentRepository.GetAllAsync())
 
-        var policies = activeAssignments
-            .Select(a => _policyRepository.GetById(a.PolicyId))
-            .Where(p => p is not null && p.IsActive)
-            .Select(p => p!)
-            .ToList();
+        .Where(a => a.IsActive)
+
+        .Where(a => AppliesToDevice(a, device))
+
+        .ToList();
+
+        var policies = new List<CompliancePolicy>();
+
+        foreach (var assignment in activeAssignments)
+
+        {   
+
+            var policy = await _policyRepository.GetByIdAsync(assignment.PolicyId);
+
+            if (policy is not null && policy.IsActive)
+
+            {
+
+                policies.Add(policy);
+
+            }
+
+        }
 
         return policies;
     }
