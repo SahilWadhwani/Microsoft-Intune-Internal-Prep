@@ -44,6 +44,10 @@ app.Map("/health", healthApp =>
     });
 });
 
+
 app.MapControllers();
 app.Run();
 
+// Make the Program class public for integration testing
+// This allows the WebApplicationFactory in the integration tests to reference the Program class as the entry point for hosting the API in-memory
+public partial class Program { }
