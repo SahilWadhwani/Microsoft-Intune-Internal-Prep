@@ -19,6 +19,7 @@ public class PolicyAssignmentsController : ControllerBase
     }
 
     [HttpPost("api/policies/{policyId}/assignments")]
+    [Authorize(Policy = "CanAssignPolicies")]
     public ActionResult<PolicyAssignmentResponse> CreateAssignment(
         string policyId,
         CreatePolicyAssignmentRequest request)
@@ -37,6 +38,7 @@ public class PolicyAssignmentsController : ControllerBase
     }
 
     [HttpGet("api/policies/{policyId}/assignments")]
+    [Authorize(Policy = "CanReadPolicies")]
     public ActionResult<PagedPolicyAssignmentsResponse> GetAssignmentsForPolicy(
         string policyId,
         [FromQuery] GetPolicyAssignmentsQuery query)
@@ -57,6 +59,7 @@ public class PolicyAssignmentsController : ControllerBase
     }
 
     [HttpGet("api/assignments/{assignmentId}")]
+    [Authorize(Policy = "CanReadPolicies")]
     public ActionResult<PolicyAssignmentResponse> GetAssignmentById(string assignmentId)
     {
         var assignment = _assignmentService.GetAssignmentById(assignmentId);

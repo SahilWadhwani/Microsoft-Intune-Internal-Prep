@@ -20,6 +20,7 @@ public class PoliciesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "CanWritePolicies")]
     public ActionResult<PolicyResponse> Create(CreatePolicyRequest request)
     {
         var policy = _policyService.CreatePolicy(request);
@@ -33,6 +34,7 @@ public class PoliciesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "CanReadPolicies")]
     public ActionResult<PagedPoliciesResponse> GetPolicies([FromQuery] GetPoliciesQuery query)
     {
         if (query.Page < 1 || query.PageSize < 1 || query.PageSize > 100)
@@ -45,6 +47,7 @@ public class PoliciesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "CanReadPolicies")]
     public ActionResult<PolicyResponse> GetById(string id)
     {
         var policy = _policyService.GetPolicyById(id);

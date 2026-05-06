@@ -20,6 +20,7 @@ public class AccessDecisionsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "CanRequestAccessDecision")]
     public ActionResult<AccessDecisionResponse> CreateDecision(
         CreateAccessDecisionRequest request)
     {

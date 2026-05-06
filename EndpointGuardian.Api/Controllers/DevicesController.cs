@@ -21,6 +21,7 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "CanWriteDevices")]
     public async Task<ActionResult<DeviceResponse>> Create(CreateDeviceRequest request)
     {
         var result = await _deviceService.CreateDeviceAsync(request);
@@ -34,6 +35,7 @@ public class DevicesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "CanReadDevices")]  
     public async Task<ActionResult<PagedDeviceResponse>> GetDevices([FromQuery] GetDevicesQuery query)
     {
         if (query.page < 1 || query.PageSize < 1 || query.PageSize > 100)
@@ -45,6 +47,7 @@ public class DevicesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "CanReadDevices")]
     public async Task<ActionResult<DeviceResponse>> GetById(string id)
     {
         _logger.LogInformation("Received request to fetch device with id {DeviceId}", id);
@@ -74,6 +77,7 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost("{id}/evaluate")]
+    [Authorize(Policy = "CanRunEvaluations")]
     public ActionResult<ComplianceEvaluationResult> Evaluate(string id)
     {
         var result = _deviceService.EvaluateDevice(id);
@@ -87,9 +91,9 @@ public class DevicesController : ControllerBase
     }
 
     [HttpsPost("{id}/evaluations")]
-    public ActionResult<DeviceComplianceEvaluationResult> CreateEvaluation(string id)
+    public async Task<ActionResult<DeviceComplianceEvaluationResult>> CreateEvaluation(string id)
     {
-        var result = _deviceComplianceService.EvaluateDevice(id);
+        var result = await _deviceComplianceService.EvaluateDevice(id);
 
         if (result is null)
         {
