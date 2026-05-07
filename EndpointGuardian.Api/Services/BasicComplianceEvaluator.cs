@@ -1,4 +1,5 @@
 using EndpointGuardian.Api.Models;
+using EndpointGuardian.Api.Models.Entities;
 
 namespace EndpointGuardian.Api.Services;
 

@@ -38,12 +38,18 @@ builder.Services.AddScoped<IPolicyService, PolicyService>();
 builder.Services.AddScoped<IEffectivePolicyResolver, EffectivePolicyResolver>();
 builder.Services.AddScoped<IPolicyAssignmentService, PolicyAssignmentService>();
 builder.Services.AddScoped<IAccessDecisionService, AccessDecisionService>();
+builder.Services.AddScoped<IRemediationService, RemediationService>();
+
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 builder.Services.AddTransient<IComplianceEvaluator, BasicComplianceEvaluator>();
 
 builder.Services.AddScoped<IDeviceRepository, EfDeviceRepository>();
 builder.Services.AddScoped<IPolicyRepository, EfPolicyRepository>();
 builder.Services.AddScoped<IPolicyAssignmentRepository, EfPolicyAssignmentRepository>();
+builder.Services.AddScoped<IRemediationActionRepository, EfRemediationActionRepository>();
+
+builder.Services.AddScoped<IAuditEventRepository, EfAuditEventRepository>();
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];

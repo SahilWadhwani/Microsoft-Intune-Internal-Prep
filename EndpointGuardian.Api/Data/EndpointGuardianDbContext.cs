@@ -15,11 +15,17 @@ public class EndpointGuardianDbContext : DbContext
     public DbSet<CompliancePolicy> Policies => Set<CompliancePolicy>();
     public DbSet<PolicyAssignment> PolicyAssignments => Set<PolicyAssignment>();
 
+    public DbSet<RemediationAction> RemediationActions => Set<RemediationAction>();
+
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureManagedDevice(modelBuilder);
         ConfigureCompliancePolicy(modelBuilder);
         ConfigurePolicyAssignment(modelBuilder);
+        ConfigureRemediationAction(modelBuilder);
+        ConfigureAuditEvent(modelBuilder);
     }
 
     private static void ConfigureManagedDevice(ModelBuilder modelBuilder)
@@ -82,4 +88,60 @@ public class EndpointGuardianDbContext : DbContext
                 .HasMaxLength(200);
         });
     }
+
+    private static void ConfigureRemediationAction(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RemediationAction>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+
+            entity.Property(a => a.DeviceId)
+                .IsRequired();
+
+            entity.Property(a => a.ActionType)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(a => a.Status)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(a => a.RequestedBy)
+                .IsRequired()
+            .HasMaxLength(200);
+
+            entity.Property(a => a.ResultMessage)
+                .HasMaxLength(1000);
+        });
+
+    }
+
+    private static void ConfigureAuditEvent(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuditEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ActionType)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(e => e.EntityType)
+                .HasConversion<string>()
+                .IsRequired();
+
+            entity.Property(e => e.EntityId)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Actor)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Summary)
+                .IsRequired()
+                .HasMaxLength(1000);
+        });
+    }
+  
 }

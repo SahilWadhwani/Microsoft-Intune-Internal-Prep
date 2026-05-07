@@ -162,4 +162,3 @@ Today, you shifted from **building features** to **engineering trust**. By imple
 **Next Up: Day 21 — Remediation and Audit Events.** Now that we know *who* is calling our API, we're going to keep a permanent record of every important action they take.
 
 ---
-**Ready to test your `/dev/token` and see your first `403 Forbidden`?**

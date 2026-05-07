@@ -94,21 +94,21 @@ public class BasicComplianceEvaluatorTests
 
     [Fact]
 
-public void EvaluatePolicy_WhenOsVersionTooLow_ReturnsNonCompliantWithReason()
+    public void EvaluatePolicy_WhenOsVersionTooLow_ReturnsNonCompliantWithReason()
 
-{
+    {
 
-    var device = CreateDevice(osVersion: 12);
+        var device = CreateDevice(osVersion: 12);
 
-    var policy = CreatePolicy(minimumOsVersion: 13);
+        var policy = CreatePolicy(minimumOsVersion: 13);
 
-    var result = _evaluator.EvaluatePolicy(device, policy);
+        var result = _evaluator.EvaluatePolicy(device, policy);
 
-    result.Status.Should().Be(ComplianceStatus.NonCompliant);
+        result.Status.Should().Be(ComplianceStatus.NonCompliant);
 
-    result.FailureReasons.Should()
+        result.FailureReasons.Should()
 
-        .Contain(r => r.Code == "OS_VERSION_TOO_LOW");
+            .Contain(r => r.Code == "OS_VERSION_TOO_LOW");
 
-}
+    }
 }
