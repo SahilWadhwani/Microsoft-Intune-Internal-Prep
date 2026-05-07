@@ -22,13 +22,19 @@ using System.Text;
 using EndpointGuardian.Api.Security;
 
 using Microsoft.IdentityModel.Tokens;
+using EndpointGuardian.Api.BackgroundJobs;
+
+using EndpointGuardian.Api.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.Configure<CompliancePolicyOptions>(
-
     builder.Configuration.GetSection("CompliancePolicy"));
+
+builder.Services.Configure<ScheduledComplianceOptions>(
+    builder.Configuration.GetSection("ScheduledCompliance"));
+
 
 builder.Services.AddDbContext<EndpointGuardianDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("EndpointGuardianDb")));
@@ -39,6 +45,8 @@ builder.Services.AddScoped<IEffectivePolicyResolver, EffectivePolicyResolver>();
 builder.Services.AddScoped<IPolicyAssignmentService, PolicyAssignmentService>();
 builder.Services.AddScoped<IAccessDecisionService, AccessDecisionService>();
 builder.Services.AddScoped<IRemediationService, RemediationService>();
+builder.Services.AddScoped<IScheduledComplianceEvaluationJob, ScheduledComplianceEvaluationJob>();
+builder.Services.AddHostedService<ScheduledComplianceEvaluationWorker>();
 
 builder.Services.AddScoped<IAuditService, AuditService>();
 

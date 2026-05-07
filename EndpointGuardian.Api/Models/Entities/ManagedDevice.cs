@@ -14,6 +14,7 @@ public class ManagedDevice
     public DateTime LastCheckInUtc { get; private set; }
     public ComplianceStatus? CurrentComplianceStatus { get; private set; }
     public DevicePostureSnapshot? CurrentPostureSnapshot { get; private set; }
+    public DateTime? LastComplianceEvaluationAtUtc { get; private set; }
 
     public ManagedDevice(
         string id,
